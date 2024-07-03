@@ -1,0 +1,167 @@
+name: Go CI/CD
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: '1.21'
+
+    - name: Install dependencies
+      run: go mod tidy
+
+    - name: Install golint
+      run: go install golang.org/x/lint/golint@latest
+
+    - name: Lint code
+      run: golint ./...
+
+    - name: Run tests
+      run: go test ./...
+
+  build:
+    runs-on: ${{ matrix.os }}
+    if: startsWith(github.ref, 'refs/tags/')
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: '1.21'
+
+    - name: Install dependencies
+      run: go mod tidy
+
+    - name: Build binary (Linux and macOS)
+      if: runner.os != 'Windows'
+      run: go build -o myapp
+
+    - name: Build binary (Windows)
+      if: runner.os == 'Windows'
+      run: go build -o myapp.exe
+
+    - name: Upload Build Artifact (Linux and macOS)
+      if: runner.os != 'Windows'
+      uses: actions/upload-artifact@v2
+      with:
+        name: myapp-${{ matrix.os }}
+        path: ./myapp
+
+    - name: Upload Build Artifact (Windows)
+      if: runner.os == 'Windows'
+      uses: actions/upload-artifact@v2
+      with:
+        name: myapp-windows
+        path: ./myapp.exe
+
+  release:
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: '1.21'
+
+    - name: Install dependencies
+      run: go mod tidy
+
+    - name: Create GitHub Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.PAT }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: false
+        prerelease: false
+
+    - name: Download Build Artifacts (Linux)
+      uses: actions/download-artifact@v2
+      with:
+        name: myapp-ubuntu-latest
+        path: ./myapp-ubuntu
+
+    - name: Download Build Artifacts (Windows)
+      uses: actions/download-artifact@v2
+      with:
+        name: myapp-windows
+        path: ./myapp-windows
+
+    - name: Download Build Artifacts (macOS)
+      uses: actions/download-artifact@v2
+      with:
+        name: myapp-macos-latest
+        path: ./myapp-macos
+
+    - name: List downloaded files (Linux)
+      if: runner.os == 'Linux'
+      run: ls -al ./myapp-ubuntu
+
+    - name: List downloaded files (Windows)
+      if: runner.os == 'Windows'
+      run: dir ./myapp-windows
+
+    - name: List downloaded files (macOS)
+      if: runner.os == 'macOS'
+      run: ls -al ./myapp-macos
+
+    - name: Upload Release Asset (Linux)
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.PAT }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./myapp-ubuntu/myapp
+        asset_name: myapp-ubuntu-${{ github.ref }}
+        asset_content_type: application/octet-stream
+
+    - name: Upload Release Asset (Windows)
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.PAT }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./myapp-windows/myapp.exe
+        asset_name: myapp-windows-${{ github.ref }}
+        asset_content_type: application/octet-stream
+
+    - name: Upload Release Asset (macOS)
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.PAT }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./myapp-macos/myapp
+        asset_name: myapp-macos-${{ github.ref }}
+        asset_content_type: application/octet-stream
