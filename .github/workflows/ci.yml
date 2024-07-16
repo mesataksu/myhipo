@@ -30,6 +30,9 @@ jobs:
 
     - name: Install golint
       run: go install golang.org/x/lint/golint@latest
+    
+    - name: Run go fmt
+      run: go fmt ./...
 
     - name: Lint code
       run: golint ./...
@@ -58,25 +61,25 @@ jobs:
 
     - name: Build binary (Linux and macOS)
       if: runner.os != 'Windows'
-      run: go build -o myapp
+      run: go build -o hipo
 
     - name: Build binary (Windows)
       if: runner.os == 'Windows'
-      run: go build -o myapp.exe
+      run: go build -o hipo.exe
 
     - name: Upload Build Artifact (Linux and macOS)
       if: runner.os != 'Windows'
       uses: actions/upload-artifact@v2
       with:
-        name: myapp-${{ matrix.os }}
-        path: ./myapp
+        name: hipo-${{ matrix.os }}
+        path: ./hipo
 
     - name: Upload Build Artifact (Windows)
       if: runner.os == 'Windows'
       uses: actions/upload-artifact@v2
       with:
-        name: myapp-windows
-        path: ./myapp.exe
+        name: hipo-windows
+        path: ./hipo.exe
 
   release:
     runs-on: ubuntu-latest
@@ -109,32 +112,32 @@ jobs:
     - name: Download Build Artifacts (Linux)
       uses: actions/download-artifact@v2
       with:
-        name: myapp-ubuntu-latest
-        path: ./myapp-ubuntu
+        name: hipo-ubuntu-latest
+        path: ./hipo-ubuntu
 
     - name: Download Build Artifacts (Windows)
       uses: actions/download-artifact@v2
       with:
-        name: myapp-windows
-        path: ./myapp-windows
+        name: hipo-windows
+        path: ./hipo-windows
 
     - name: Download Build Artifacts (macOS)
       uses: actions/download-artifact@v2
       with:
-        name: myapp-macos-latest
-        path: ./myapp-macos
+        name: hipo-macos-latest
+        path: ./hipo-macos
 
     - name: List downloaded files (Linux)
       if: runner.os == 'Linux'
-      run: ls -al ./myapp-ubuntu
+      run: ls -al ./hipo-ubuntu
 
     - name: List downloaded files (Windows)
       if: runner.os == 'Windows'
-      run: dir ./myapp-windows
+      run: dir ./hipo-windows
 
     - name: List downloaded files (macOS)
       if: runner.os == 'macOS'
-      run: ls -al ./myapp-macos
+      run: ls -al ./hipo-macos
 
     - name: Upload Release Asset (Linux)
       uses: actions/upload-release-asset@v1
@@ -142,8 +145,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.PAT }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./myapp-ubuntu/myapp
-        asset_name: myapp-ubuntu-${{ github.ref }}
+        asset_path: ./hipo-ubuntu/hipo
+        asset_name: hipo-ubuntu-${{ github.ref_name }}
         asset_content_type: application/octet-stream
 
     - name: Upload Release Asset (Windows)
@@ -152,8 +155,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.PAT }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./myapp-windows/myapp.exe
-        asset_name: myapp-windows-${{ github.ref }}
+        asset_path: ./hipo-windows/hipo.exe
+        asset_name: hipo-windows-${{ github.ref_name }}
         asset_content_type: application/octet-stream
 
     - name: Upload Release Asset (macOS)
@@ -162,6 +165,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.PAT }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./myapp-macos/myapp
-        asset_name: myapp-macos-${{ github.ref }}
+        asset_path: ./hipo-macos/hipo
+        asset_name: hipo-macos-${{ github.ref_name }}
         asset_content_type: application/octet-stream
