@@ -146,7 +146,7 @@ jobs:
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: ./hipo-ubuntu/hipo
-        asset_name: hipo-ubuntu-${{ github.ref_name }}
+        asset_name: hipo-ubuntu-${{ runner.arch }}-${{ github.ref_name }}
         asset_content_type: application/octet-stream
 
     - name: Upload Release Asset (Windows)
@@ -156,7 +156,7 @@ jobs:
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: ./hipo-windows/hipo.exe
-        asset_name: hipo-windows-${{ github.ref_name }}
+        asset_name: hipo-windows-${{ runner.arch }}-${{ github.ref_name }}
         asset_content_type: application/octet-stream
 
     - name: Upload Release Asset (macOS)
@@ -166,5 +166,5 @@ jobs:
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: ./hipo-macos/hipo
-        asset_name: hipo-macos-${{ github.ref_name }}
+        asset_name: hipo-macos-${{ runner.arch }}-${{ github.ref_name }}
         asset_content_type: application/octet-stream
