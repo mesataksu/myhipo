@@ -194,15 +194,3 @@ jobs:
         asset_path: ./hipo-macos-arm64/hipo
         asset_name: hipo-macos-arm64-${{ github.ref_name }}
         asset_content_type: application/octet-stream
-
-        asset_content_type: application/octet-stream
-
-    - name: Upload Release Asset (macOS arm64)
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.PAT }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./hipo-macos-arm64/hipo
-        asset_name: hipo-macos-arm64-${{ github.ref_name }}
-        asset_content_type: application/octet-stream
