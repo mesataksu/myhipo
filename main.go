@@ -45,6 +45,7 @@ func main() {
 
 		if done {
 			executeFile(destPath)
+			
 		}
 	}
 
