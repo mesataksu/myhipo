@@ -15,6 +15,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
+        arch: [x64, arm64]
 
     steps:
     - name: Checkout repository
@@ -46,6 +47,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
+        arch: [x64, arm64]
 
     steps:
     - name: Checkout repository
@@ -71,14 +73,14 @@ jobs:
       if: runner.os != 'Windows'
       uses: actions/upload-artifact@v2
       with:
-        name: hipo-${{ matrix.os }}
+        name: hipo-${{ matrix.os }}-${{ matrix.arch }}
         path: ./hipo
 
     - name: Upload Build Artifact (Windows)
       if: runner.os == 'Windows'
       uses: actions/upload-artifact@v2
       with:
-        name: hipo-windows
+        name: hipo-windows-${{ matrix.arch }}
         path: ./hipo.exe
 
   release:
@@ -112,32 +114,42 @@ jobs:
     - name: Download Build Artifacts (Linux)
       uses: actions/download-artifact@v2
       with:
-        name: hipo-ubuntu-latest
-        path: ./hipo-ubuntu
+        name: hipo-ubuntu-latest-x64
+        path: ./hipo-ubuntu-x64
 
     - name: Download Build Artifacts (Windows)
       uses: actions/download-artifact@v2
       with:
-        name: hipo-windows
-        path: ./hipo-windows
+        name: hipo-windows-x64
+        path: ./hipo-windows-x64
 
-    - name: Download Build Artifacts (macOS)
+    - name: Download Build Artifacts (macOS x64)
       uses: actions/download-artifact@v2
       with:
-        name: hipo-macos-latest
-        path: ./hipo-macos
+        name: hipo-macos-latest-x64
+        path: ./hipo-macos-x64
+
+    - name: Download Build Artifacts (macOS arm64)
+      uses: actions/download-artifact@v2
+      with:
+        name: hipo-macos-latest-arm64
+        path: ./hipo-macos-arm64
 
     - name: List downloaded files (Linux)
       if: runner.os == 'Linux'
-      run: ls -al ./hipo-ubuntu
+      run: ls -al ./hipo-ubuntu-x64
 
     - name: List downloaded files (Windows)
       if: runner.os == 'Windows'
-      run: dir ./hipo-windows
+      run: dir ./hipo-windows-x64
 
-    - name: List downloaded files (macOS)
-      if: runner.os == 'macOS'
-      run: ls -al ./hipo-macos
+    - name: List downloaded files (macOS x64)
+      if: runner.os == 'macOS' && matrix.arch == 'x64'
+      run: ls -al ./hipo-macos-x64
+
+    - name: List downloaded files (macOS arm64)
+      if: runner.os == 'macOS' && matrix.arch == 'arm64'
+      run: ls -al ./hipo-macos-arm64
 
     - name: Upload Release Asset (Linux)
       uses: actions/upload-release-asset@v1
@@ -145,8 +157,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.PAT }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./hipo-ubuntu/hipo
-        asset_name: hipo-ubuntu-${{ runner.arch }}-${{ github.ref_name }}
+        asset_path: ./hipo-ubuntu-x64/hipo
+        asset_name: hipo-linux-x64-${{ github.ref_name }}
         asset_content_type: application/octet-stream
 
     - name: Upload Release Asset (Windows)
@@ -155,16 +167,26 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.PAT }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./hipo-windows/hipo.exe
-        asset_name: hipo-windows-${{ runner.arch }}-${{ github.ref_name }}
+        asset_path: ./hipo-windows-x64/hipo.exe
+        asset_name: hipo-windows-x64-${{ github.ref_name }}
         asset_content_type: application/octet-stream
 
-    - name: Upload Release Asset (macOS)
+    - name: Upload Release Asset (macOS x64)
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.PAT }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./hipo-macos/hipo
-        asset_name: hipo-macos-${{ runner.arch }}-${{ github.ref_name }}
+        asset_path: ./hipo-macos-x64/hipo
+        asset_name: hipo-macos-x64-${{ github.ref_name }}
+        asset_content_type: application/octet-stream
+
+    - name: Upload Release Asset (macOS arm64)
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.PAT }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./hipo-macos-arm64/hipo
+        asset_name: hipo-macos-arm64-${{ github.ref_name }}
         asset_content_type: application/octet-stream
